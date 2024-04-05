@@ -1,0 +1,69 @@
+import java.util.*;
+
+public class AlienDictionary {
+    public String alienOrder(String[] words) {
+        Map<Character, Set<Character>> graph = new HashMap<>();
+        Map<Character, Integer> indegree = new HashMap<>();
+        
+        // Initialize the indegree map
+        for (String word : words) {
+            for (char c : word.toCharArray()) {
+                indegree.put(c, 0);
+            }
+        }
+        
+        // Build the graph
+        for (int i = 0; i < words.length - 1; i++) {
+            String word1 = words[i];
+            String word2 = words[i + 1];
+            int minLength = Math.min(word1.length(), word2.length());
+            
+            for (int j = 0; j < minLength; j++) {
+                char c1 = word1.charAt(j);
+                char c2 = word2.charAt(j);
+                
+                if (c1 != c2) {
+                    graph.computeIfAbsent(c1, k -> new HashSet<>()).add(c2);
+                    indegree.put(c2, indegree.get(c2) + 1);
+                    break;
+                }
+            }
+        }
+        
+        // Perform topological sorting
+        Queue<Character> queue = new LinkedList<>();
+        for (char c : indegree.keySet()) {
+            if (indegree.get(c) == 0) {
+                queue.offer(c);
+            }
+        }
+        
+        StringBuilder result = new StringBuilder();
+        while (!queue.isEmpty()) {
+            char current = queue.poll();
+            result.append(current);
+            if (graph.containsKey(current)) {
+                for (char neighbor : graph.get(current)) {
+                    indegree.put(neighbor, indegree.get(neighbor) - 1);
+                    if (indegree.get(neighbor) == 0) {
+                        queue.offer(neighbor);
+                    }
+                }
+            }
+        }
+        
+        // Check for cyclic dependencies
+        if (result.length() != indegree.size()) {
+            return "";
+        }
+        
+        return result.toString();
+    }
+    
+    public static void main(String[] args) {
+        AlienDictionary alienDictionary = new AlienDictionary();
+        
+        String[] words = {"wrt", "wrf", "er", "ett", "rftt"};
+        System.out.println(alienDictionary.alienOrder(words)); // Output: "wertf"
+    }
+}
